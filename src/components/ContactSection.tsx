@@ -1,12 +1,71 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
-const ContactSection = () => {
-  const [submitted, setSubmitted] = useState(false);
+type ContactSectionProps = {
+  content?: {
+    title?: string | null;
+    body?: string | null;
+    button_label?: string | null;
+    form_config?: {
+      successMessage?: string;
+      consentLabel?: string;
+    } | null;
+  } | null;
+};
 
-  const handleSubmit = (e: FormEvent) => {
+const ContactSection = ({ content }: ContactSectionProps) => {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setSuccess(false);
+
+    const formData = new FormData(e.currentTarget);
+
+    const data = {
+      team_slug: "team-frost",
+      source: "ai-web-2026",
+      company_name: formData.get("company_name"),
+      contact_person: formData.get("contact_person"),
+      email: formData.get("email"),
+      message: formData.get("message"),
+      consent: formData.get("consent") === "on",
+    };
+
+    const { data: insertedInquiry, error } = await supabase
+      .from("inquiries")
+      .insert([data])
+      .select()
+      .single();
+
+    if (error) {
+      console.error(error);
+      alert("Failed to send message");
+      setLoading(false);
+      return;
+    }
+
+    const emailResponse = await fetch("/.netlify/functions/send-inquiry-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inquiryId: insertedInquiry.id,
+        ...data,
+      }),
+    });
+
+    if (!emailResponse.ok) {
+      console.error("Email function failed");
+    }
+
+    setSuccess(true);
+    e.currentTarget.reset();
+    setLoading(false);
   };
 
   return (
@@ -19,54 +78,101 @@ const ContactSection = () => {
           transition={{ duration: 0.5, ease: [0.2, 0, 0, 1] }}
           className="max-w-2xl"
         >
-          <p className="text-label text-primary mb-4">Contact Us</p>
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-4">
-            Get in Touch
-          </h2>
-          <p className="text-muted-foreground leading-relaxed mb-10">
-            If you are interested in partnering with us or learning more about our refrigerant gas supply solutions, please send us a message.
+          <p className="text-label text-primary mb-4">
+            {content?.title || "Contact Us"}
           </p>
 
-          {submitted ? (
-            <div className="card-surface text-center py-12">
-              <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Request Received</h3>
-              <p className="text-muted-foreground text-sm">We will review your inquiry and respond within 1–2 business days.</p>
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-6">
+            {content?.title || "Contact Us"}
+          </h2>
+
+          <p className="text-muted-foreground leading-relaxed mb-8">
+            {content?.body ||
+              "If you are interested in partnering with us or learning more about our refrigerant gas supply solutions, please send us a message."}
+          </p>
+
+          {success && (
+            <div className="mb-4 text-green-600">
+              {content?.form_config?.successMessage ||
+                "Thank you for your message. We will contact you shortly."}
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-label">Company Name</label>
-                  <input required type="text" className="input-field" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-label">Contact Person</label>
-                  <input required type="text" className="input-field" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-label">Email</label>
-                <input required type="email" className="input-field" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-label">Message</label>
-                <textarea required rows={5} className="input-field resize-none" />
-              </div>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input required type="checkbox" className="mt-1 h-4 w-4 rounded border-border accent-primary" />
-                <span className="text-sm text-muted-foreground">I consent to the processing of my data for the purpose of this inquiry.</span>
-              </label>
-              <button
-                type="submit"
-                className="bg-primary text-primary-foreground font-semibold px-8 py-3.5 rounded-[6px] transition-all duration-200 hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Send Request
-              </button>
-            </form>
           )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="company_name" className="block text-sm mb-2">
+                Company name
+              </label>
+              <input
+                id="company_name"
+                name="company_name"
+                type="text"
+                className="w-full rounded-md border px-4 py-3 bg-background"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="contact_person" className="block text-sm mb-2">
+                Contact person
+              </label>
+              <input
+                id="contact_person"
+                name="contact_person"
+                type="text"
+                className="w-full rounded-md border px-4 py-3 bg-background"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="w-full rounded-md border px-4 py-3 bg-background"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-sm mb-2">
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                rows={5}
+                className="w-full rounded-md border px-4 py-3 bg-background"
+                required
+              />
+            </div>
+
+            <div className="flex items-start gap-2">
+              <input
+                id="consent"
+                name="consent"
+                type="checkbox"
+                className="mt-1"
+                required
+              />
+              <label htmlFor="consent" className="text-sm text-muted-foreground">
+                {content?.form_config?.consentLabel ||
+                  "I agree to the processing of my information for contact purposes."}
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-primary-foreground"
+            >
+              {loading ? "Sending..." : content?.button_label || "Send Request"}
+            </button>
+          </form>
         </motion.div>
       </div>
     </section>
