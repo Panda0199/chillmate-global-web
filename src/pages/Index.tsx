@@ -9,13 +9,14 @@ import { getSiteContent, PageSection, SiteSettings } from "@/lib/content";
 
 const Index = () => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [sections, setSections] = useState<PageSection[]>([]);
-  const [loading, setLoading] = useState(true);
+const [sections, setSections] = useState<PageSection[]>([]);
+const [loading, setLoading] = useState(true);
+const [language, setLanguage] = useState<"en" | "et">("en");
 
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const { settings, sections } = await getSiteContent("en");
+        const { settings, sections } = await getSiteContent(language);
         console.log("SECTIONS FROM SUPABASE:", sections);
         setSettings(settings);
         setSections(sections);
@@ -27,7 +28,7 @@ const Index = () => {
     };
 
     loadContent();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     if (settings?.page_title) {
@@ -51,8 +52,22 @@ const Index = () => {
 
   return (
     <>
-      <Navbar />
-      <main>
+  <Navbar />
+  <div className="container pt-6 flex justify-end gap-2">
+    <button
+      onClick={() => setLanguage("en")}
+      className={`px-3 py-1 rounded-md border ${language === "en" ? "bg-primary text-primary-foreground" : ""}`}
+    >
+      EN
+    </button>
+    <button
+      onClick={() => setLanguage("et")}
+      className={`px-3 py-1 rounded-md border ${language === "et" ? "bg-primary text-primary-foreground" : ""}`}
+    >
+      ET
+    </button>
+  </div>
+  <main>
         {hero && <HeroSection content={hero.translation} />}
         {about && <AboutSection content={about.translation} />}
         {offerings && <OfferingsSection content={offerings.translation} />}
