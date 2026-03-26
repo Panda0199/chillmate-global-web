@@ -1,0 +1,33 @@
+AI Web Session 2026 Submission
+
+Student name: Anik Joy
+Team slug: team-frost
+
+Live URL: : vibecodingmainor.netlify.app
+Repository URL: https://github.com/Panda0199/chillmate-global-web
+
+Stack used:
+- Lovable
+- Cursor
+- React
+- Supabase
+- Netlify
+- Resend
+- GitHub
+
+CMS access:
+- Open /cms on the live site
+- Current CMS is available directly through the app route
+
+Public site reads CMS configuration from:
+- Supabase tables: site_settings, page_sections, section_translations
+
+Inquiries are stored in:
+- Supabase table: inquiries
+
+Resend integration location in codebase:
+- netlify/functions/send-inquiry-email.ts
+
+Notes:
+- Environment variables are configured in Netlify
+- No real passwords are published in this file
