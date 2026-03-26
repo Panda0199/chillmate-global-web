@@ -53,7 +53,7 @@ const [language, setLanguage] = useState<"en" | "et">("en");
   return (
     <>
   <Navbar />
-  <div className="container pt-6 flex justify-end gap-2">
+  <div className="container pt-24 flex justify-end gap-2">
     <button
       onClick={() => setLanguage("en")}
       className={`px-3 py-1 rounded-md border ${language === "en" ? "bg-primary text-primary-foreground" : ""}`}
