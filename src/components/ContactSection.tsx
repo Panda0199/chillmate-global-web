@@ -26,7 +26,7 @@ const ContactSection = ({ content }: ContactSectionProps) => {
     const formData = new FormData(e.currentTarget);
 
     const data = {
-      team_slug: "team-frost",
+      team_slug: "team-mainor",
       source: "ai-web-2026",
       company_name: formData.get("company_name"),
       contact_person: formData.get("contact_person"),

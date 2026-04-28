@@ -1,7 +1,7 @@
 AI Web Session 2026 Submission
 
 Student name: Anik Joy
-Team slug: team-frost
+Team slug: team-manor
 
 Live URL: : vibecodingmainor.netlify.app
 Repository URL: https://github.com/Panda0199/chillmate-global-web
